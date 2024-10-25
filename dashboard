@@ -12,11 +12,11 @@ library(ggplot2)
 
 # Load Data dari CSV
 data_keluhan <- tryCatch({
-  read.csv("data_keluhan.csv")
+  read.csv("data_keluhan_dnd.csv")
 }, error = function(e) {
   # Jika gagal load, tampilkan pesan error dan gunakan data dummy sebagai pengganti
   message("Gagal memuat data: ", e)
-  NULL
+  NULL   
 })
 
 # Data preprocessing
@@ -112,35 +112,11 @@ body <- dashboardBody(
       ),
       fluidRow(
         box(
-          title = "Form Tambah Keluhan", 
-          width = 4, 
-          solidHeader = TRUE, 
-          textInput("id_pelanggan", "ID Pelanggan"),
-          textInput("keluhan", "Keluhan"),
-          textInput("kontak", "Kontak Pelanggan"),
-          textInput("wilayah", "Segmentasi Wilayah"),
-          textInput("produk", "Produk Terkait"),
-          selectInput("status", "Status Keluhan", choices = c("Belum Ditangani", "Proses", "Selesai")),
-          textInput("agen", "Agen"),
-          dateInput("tanggal_keluhan", "Tanggal Keluhan", value = Sys.Date()),  # Input tanggal keluhan
-          numericInput("waktu_penyelesaian", "Waktu Penyelesaian (hari)", value = NA),
-          selectInput("saluran", "Saluran Komunikasi", choices = c("Chatbot", "Media Sosial", "Telepon", "Email")),
-          numericInput("waktu_respon", "Waktu Respon (jam)", value = NA),
-          numericInput("persentase_penyelesaian", "Persentase Penyelesaian (%)", value = NA),
-          numericInput("csat", "Rating CSAT (1-5)", value = NA, min = 1, max = 5),
-          numericInput("nps", "NPS Score (-100 sampai 100)", value = NA, min = -100, max = 100),
-          dateInput("tanggal_feedback", "Tanggal Feedback", value = Sys.Date()),  # Input tanggal feedback
-          textAreaInput("komentar", "Komentar Pelanggan"),
-          actionButton("add_btn", "Tambah Keluhan")
+          title = "Tabel Keluhan",
+          dataTableOutput("summary_report"),
+          width = 12
         ),
-        
-        # Tabel Keluhan Terbaru
-        box(
-          title = "Tabel Keluhan Terbaru", 
-          width = 8, 
-          solidHeader = TRUE, 
-          dataTableOutput("complaints_table")
-        )
+        downloadButton("download_report", "Download Report")
       )
     ),
     
@@ -167,19 +143,6 @@ body <- dashboardBody(
           width = 12
         )
       )
-    ),
-    
-    # Tab 5: Reports
-    tabItem(
-      tabName = "reports",
-      fluidRow(
-        box(
-          title = "Summary Report",
-          dataTableOutput("summary_report"),
-          width = 12
-        ),
-        downloadButton("download_report", "Download Report")
-      )
     )
   )
 )
@@ -193,219 +156,129 @@ ui <- dashboardPage(
 
 # Server
 server <- function(input, output, session) {
+  # Load data keluhan dari CSV sebagai reactive value
   complaints_data <- reactiveVal(data_keluhan)
-  if (!is.null(data_keluhan)) {
-    
-    complaints_data <- reactiveVal(data_keluhan)
-    
+  
+  observe({
     # Summary Data
-    total_keluhan <- nrow(data_keluhan)
-    rata2_penyelesaian_keluhan <- mean(data_keluhan$Persentase_Penyelesaian, na.rm = TRUE)
-    rata2_waktu_respon <- mean(data_keluhan$Waktu_Respon, na.rm = TRUE)
-    rata2_sla <- mean(data_keluhan$Persentase_Penyelesaian, na.rm = TRUE)
-    rata2_csat <- mean(data_keluhan$Rating_CSAT, na.rm = TRUE)
-    rata2_nps <- mean(data_keluhan$NPS_Score, na.rm = TRUE)
+    total_keluhan <- nrow(complaints_data())
+    rata2_penyelesaian_keluhan <- mean(complaints_data()$Persentase_Penyelesaian, na.rm = TRUE)
+    rata2_waktu_respon <- mean(complaints_data()$Waktu_Respon, na.rm = TRUE)
+    rata2_sla <- mean(complaints_data()$Persentase_Penyelesaian, na.rm = TRUE)
+    rata2_csat <- mean(complaints_data()$Rating_CSAT, na.rm = TRUE)
+    rata2_nps <- mean(complaints_data()$NPS_Score, na.rm = TRUE)
     
     # Value Boxes
     output$total_keluhan_box <- renderValueBox({
-      valueBox(
-        value = total_keluhan,
-        subtitle = "Total Keluhan",
-        color = "warning",
-        icon = icon("exclamation-triangle")
-      )
+      valueBox(value = total_keluhan, subtitle = "Total Keluhan", color = "warning", icon = icon("exclamation-triangle"))
     })
     
     output$penyelesaian_keluhan_box <- renderValueBox({
-      valueBox(
-        value = paste0(round(rata2_penyelesaian_keluhan * 100), "%"),
-        subtitle = "Tingkat Penyelesaian",
-        color = "success",
-        icon = icon("check-circle")
-      )
+      valueBox(value = paste0(round(rata2_penyelesaian_keluhan * 100), "%"), subtitle = "Tingkat Penyelesaian", color = "success", icon = icon("check-circle"))
     })
     
     output$waktu_respon_box <- renderValueBox({
-      valueBox(
-        value = round(rata2_waktu_respon, 2),
-        subtitle = "Waktu Respon Rata-rata (Jam)",
-        color = "primary",
-        icon = icon("clock")
-      )
+      valueBox(value = round(rata2_waktu_respon, 2), subtitle = "Waktu Respon Rata-rata (Jam)", color = "primary", icon = icon("clock"))
     })
     
     output$sla_compliance_box <- renderValueBox({
-      valueBox(
-        value = paste0(round(rata2_sla * 100), "%"),
-        subtitle = "SLA Compliance",
-        color = "purple",
-        icon = icon("thumbs-up")
-      )
+      valueBox(value = paste0(round(rata2_sla * 100), "%"), subtitle = "SLA Compliance", color = "purple", icon = icon("thumbs-up"))
     })
     
     output$csat_score_box <- renderValueBox({
-      valueBox(
-        value = round(rata2_csat, 1),
-        subtitle = "CSAT Score",
-        color = "info",
-        icon = icon("smile")
-      )
+      valueBox(value = round(rata2_csat, 1), subtitle = "CSAT Score", color = "info", icon = icon("smile"))
     })
     
     output$nps_score_box <- renderValueBox({
-      valueBox(
-        value = round(rata2_nps, 1),
-        subtitle = "NPS Score",
-        color = "danger",
-        icon = icon("heart")
-      )
+      valueBox(value = round(rata2_nps, 1), subtitle = "NPS Score", color = "danger", icon = icon("heart"))
     })
+  })
+  
+  # Grafik Tren Keluhan Bulanan per Kategori
+  output$grafik_tren_keluhan <- renderPlotly({
+    data_tren <- complaints_data() %>%
+      mutate(Bulan = format(as.Date(Tanggal), "%Y-%m")) %>%
+      group_by(Bulan, Keluhan) %>%
+      summarise(Jumlah_Keluhan = n(), .groups = 'drop') %>%
+      pivot_wider(names_from = Keluhan, values_from = Jumlah_Keluhan, values_fill = 0)
     
-    # Grafik Tren Keluhan Bulanan per Kategori
-    output$grafik_tren_keluhan <- renderPlotly({
-      data_tren <- data_keluhan %>%
-        group_by(Bulan, Keluhan) %>%
-        summarise(Jumlah_Keluhan = n()) %>%
-        pivot_wider(names_from = Keluhan, values_from = Jumlah_Keluhan, values_fill = 0)
-      
-      plot_ly(data = data_tren, x = ~Bulan, type = 'bar') %>%
-        add_bars(y = ~`Kurir tidak ramah`, name = 'Kurir tidak ramah') %>%
-        add_bars(y = ~`Pengemasan buruk`, name = 'Pengemasan buruk') %>%
-        add_bars(y = ~`Pembayaran bermasalah`, name = 'Pembayaran bermasalah') %>%
-        add_bars(y = ~`Pengiriman lambat`, name = 'Pengiriman lambat') %>%
-        add_bars(y = ~`Layanan pelanggan buruk`, name = 'Layanan pelanggan buruk') %>%
-        add_bars(y = ~`Produk rusak`, name = 'Produk rusak') %>%
-        add_bars(y = ~`Produk tidak sesuai`, name = 'Produk tidak sesuai') %>%
-        add_bars(y = ~`Salah kirim barang`, name = 'Salah kirim barang') %>%
-        add_bars(y = ~`Komunikasi tidak jelas`, name = 'Komunikasi tidak jelas') %>%
-        layout(title = "Grafik Tren Keluhan per Kategori", 
-               xaxis = list(title = "Bulan"), 
-               yaxis = list(title = "Jumlah Keluhan"), 
-               barmode = 'group')
-    })  # Penutup renderPlotly
+    plot_ly(data = data_tren, x = ~Bulan, type = 'bar') %>%
+      add_bars(y = ~`Kurir tidak ramah`, name = 'Kurir tidak ramah') %>%
+      add_bars(y = ~`Pengemasan buruk`, name = 'Pengemasan buruk') %>%
+      add_bars(y = ~`Pembayaran bermasalah`, name = 'Pembayaran bermasalah') %>%
+      add_bars(y = ~`Pengiriman lambat`, name = 'Pengiriman lambat') %>%
+      add_bars(y = ~`Layanan pelanggan buruk`, name = 'Layanan pelanggan buruk') %>%
+      add_bars(y = ~`Produk rusak`, name = 'Produk rusak') %>%
+      add_bars(y = ~`Produk tidak sesuai`, name = 'Produk tidak sesuai') %>%
+      add_bars(y = ~`Salah kirim barang`, name = 'Salah kirim barang') %>%
+      add_bars(y = ~`Komunikasi tidak jelas`, name = 'Komunikasi tidak jelas') %>%
+      layout(title = "Grafik Tren Keluhan per Kategori", 
+             xaxis = list(title = "Bulan"), 
+             yaxis = list(title = "Jumlah Keluhan"), 
+             barmode = 'group')
+  })
+  
+  # Pie Chart Keluhan
+  output$pie_chart_keluhan <- renderPlotly({
+    data_pie <- complaints_data() %>%
+      group_by(Keluhan) %>%
+      summarise(Jumlah = n(), .groups = 'drop')
     
-    # Pie Chart Keluhan
-    output$pie_chart_keluhan <- renderPlotly({
-      data_pie <- data_keluhan %>%
-        group_by(Keluhan) %>%
-        summarise(Jumlah = n())
-      
-      plot_ly(data = data_pie, labels = ~Keluhan, values = ~Jumlah, type = 'pie') %>%
-        layout(title = "Distribusi Kategori Keluhan")
-    })  # Penutup renderPlotly
-    
-    # Bar Chart Frekuensi Produk
-    output$bar_chart_produk <- renderPlotly({
-      data_produk <- data_keluhan %>%
-        group_by(Produk_Terkait) %>%
-        summarise(Jumlah_Keluhan = n()) %>%
-        arrange(desc(Jumlah_Keluhan))
-      
-      plot_ly(data = data_produk, 
-              x = ~Produk_Terkait, 
-              y = ~Jumlah_Keluhan, 
-              type = 'bar') %>%
-        layout(title = "Keluhan per Produk", 
-               xaxis = list(title = "Produk"), 
-               yaxis = list(title = "Jumlah Keluhan"))
-    })  # Penutup renderPlotly
-    
-    # Tabel Keluhan Terbaru
-    output$complaints_table <- renderDataTable({
-      # Pastikan data tidak kosong dan dalam format yang benar
-      if (!is.null(complaints_data()) && nrow(complaints_data()) > 0) {
-        datatable(
-          complaints_data(),
-          options = list(
-            pageLength = 10, 
-            autoWidth = TRUE, 
-            scrollX = TRUE
-          ),
-          rownames = FALSE,
-          colnames = c("Tanggal", "ID Pelanggan", "Keluhan", "Kontak", "Segmentasi_Wilayah", "Produk_Terkait", "Status_Keluhan", "Agen", "Waktu_Penyelesaian", "Saluran", "Waktu_Respon", "Persentase_Penyelesaian", "ID_Feedback", "Tanggal_Feedback", "Rating_CSAT", "NPS_Score", "Komentar")
-        )
-      } else {
-        datatable(data.frame())  # Tampilkan tabel kosong jika data tidak ada
-      }
-    })
-    
-    # Tambah keluhan baru ke dalam data
-    observeEvent(input$add_btn, {
-      # Buat data keluhan baru dengan nama kolom yang sesuai dengan data_keluhan
-      new_keluhan <- data.frame(
-        Tanggal = input$tanggal_keluhan,  # Menggunakan input tanggal keluhan
-        ID_Pelanggan = input$id_pelanggan,
-        Keluhan = input$keluhan,
-        Kontak = input$kontak,
-        Segmentasi_Wilayah = input$wilayah,
-        Produk_Terkait = input$produk,
-        Status_Keluhan = input$status,
-        Agen = input$agen,
-        Waktu_Penyelesaian = input$waktu_penyelesaian,
-        Saluran = input$saluran,
-        Waktu_Respon = input$waktu_respon,
-        Persentase_Penyelesaian = input$persentase_penyelesaian,
-        ID_Feedback = NA,  # Kolom ID Feedback bisa kosong
-        Tanggal_Feedback = input$tanggal_feedback,  # Menggunakan input tanggal feedback
-        Rating_CSAT = input$csat,
-        NPS_Score = input$nps,
-        Komentar = input$komentar,
-        stringsAsFactors = FALSE
-      )
-      
-      # Update the reactive value with the new complaint
-      updated_data <- add_keluhan(complaints_data(), new_keluhan)
-      complaints_data(updated_data)  # Update the reactive data
-      
-      # Reset form inputs
-      updateTextInput(session, "id_pelanggan", value = "")
-      updateTextInput(session, "keluhan", value = "")
-      updateTextInput(session, "kontak", value = "")
-      updateTextInput(session, "wilayah", value = "")
-      updateTextInput(session, "produk", value = "")
-      updateSelectInput(session, "status", selected = "Belum Ditangani")
-      updateTextInput(session, "agen", value = "")
-      updateDateInput(session, "tanggal_keluhan", value = Sys.Date())
-      updateNumericInput(session, "waktu_penyelesaian", value = NA)
-      updateSelectInput(session, "saluran", selected = "Chatbot")
-      updateNumericInput(session, "waktu_respon", value = NA)
-      updateNumericInput(session, "persentase_penyelesaian", value = NA)
-      updateNumericInput(session, "csat", value = NA)
-      updateNumericInput(session, "nps", value = NA)
-      updateDateInput(session, "tanggal_feedback", value = Sys.Date())
-      updateTextAreaInput(session, "komentar", value = "")
-    })
-    
-    # SLA Monitoring
-    output$keluhan_hampir_sla <- renderDataTable({
-      datatable(data_keluhan[data_keluhan$Tanggal >= Sys.Date() - 3, ], options = list(pageLength = 5))
-    })  # Penutup renderDataTable
-    
-    # Kinerja Agen
-    output$performance_agen <- renderDataTable({
-      agen_summary <- data_keluhan %>%
-        group_by(Agen) %>%
-        summarise(Keluhan_Terselesaikan = sum(Status_Keluhan == "Selesai", na.rm = TRUE))
-      
-      datatable(agen_summary, options = list(pageLength = 5))
-    })  # Penutup renderDataTable
-    
-    # Laporan Summary
-    output$summary_report <- renderDataTable({
-      datatable(data_keluhan)
-    })  # Penutup renderDataTable
-    
-    # Download Report
-    output$download_report <- downloadHandler(
-      filename = function() {
-        paste("laporan_keluhan_", Sys.Date(), ".csv", sep = "")
-      },
-      content = function(file) {
-        write.csv(data_keluhan, file, row.names = FALSE)
-      }
-    )
+    plot_ly(data = data_pie, labels = ~Keluhan, values = ~Jumlah, type = 'pie') %>%
+      layout(title = "Distribusi Kategori Keluhan")
+  })
+  
+
+# Bar Chart Frekuensi Produk
+output$bar_chart_produk <- renderPlotly({
+  data_produk <- complaints_data() %>%
+    group_by(Produk_Terkait) %>%
+    summarise(Jumlah_Keluhan = n(), .groups = 'drop') %>%
+    arrange(desc(Jumlah_Keluhan))
+  
+  plot_ly(data = data_produk, x = ~Produk_Terkait, y = ~Jumlah_Keluhan, type = 'bar') %>%
+    layout(title = "Keluhan per Produk", xaxis = list(title = "Produk"), yaxis = list(title = "Jumlah Keluhan"))
+})
+
+# Download Report
+output$download_report <- downloadHandler(
+  filename = function() {
+    paste("laporan_keluhan_", Sys.Date(), ".csv", sep = "")
+  },
+  content = function(file) {
+    write.csv(complaints_data(), file, row.names = FALSE)
   }
-}  # Penutup server function
+)
+
+# SLA Monitoring
+output$keluhan_hampir_sla <- renderDataTable({
+  datatable(
+    complaints_data()[complaints_data()$Tanggal >= Sys.Date() - 3, ],
+    options = list(pageLength = 5, dom = 'tip'),
+    caption = "Keluhan yang mendekati SLA"
+  )
+})
+
+# Kinerja Agen
+output$performance_agen <- renderDataTable({
+  agen_summary <- complaints_data() %>%
+    group_by(Agen) %>%
+    summarise(Keluhan_Terselesaikan = sum(Status_Keluhan == "Selesai", na.rm = TRUE))
+  
+  datatable(
+    agen_summary,
+    options = list(pageLength = 5, dom = 'tip'),
+    caption = "Kinerja Penyelesaian Keluhan oleh Agen"
+  )
+})
+
+# Laporan Summary
+output$summary_report <- renderDataTable({
+  datatable(complaints_data())
+})
+}
 
 # Jalankan aplikasi
 shinyApp(ui = ui, server = server)
+
+    
