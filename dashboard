@@ -1,0 +1,10 @@
+add_bars(y = ~`Harga tidak sesuai promosi`, name = 'Harga tidak sesuai promosi') %>%
+        add_bars(y = ~`Kurir tidak ramah`, name = 'Kurir tidak ramah') %>%
+        add_bars(y = ~`Pengemasan buruk`, name = 'Pengemasan buruk') %>%
+        add_bars(y = ~`Pembayaran bermasalah`, name = 'Pembayaran bermasalah') %>%
+        add_bars(y = ~`Pengiriman lambat`, name = 'Pengiriman lambat') %>%
+        add_bars(y = ~`Layanan pelanggan buruk`, name = 'Layanan pelanggan buruk') %>%
+        add_bars(y = ~`Produk rusak`, name = 'Produk rusak') %>%
+        add_bars(y = ~`Produk tidak sesuai`, name = 'Produk tidak sesuai') %>%
+        add_bars(y = ~`Salah kirim barang`, name = 'Salah kirim barang') %>%
+        add_bars(y = ~`Komunikasi tidak jelas`, name = 'Komunikasi tidak jelas') %>%
