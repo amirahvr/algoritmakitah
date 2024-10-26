@@ -24,6 +24,7 @@ if (!is.null(data_keluhan)) {
   data_keluhan$Tanggal <- as.Date(data_keluhan$Tanggal)
   data_keluhan$Bulan <- format(data_keluhan$Tanggal, "%B")
   data_keluhan$Bulan <- factor(data_keluhan$Bulan, levels = month.name)  # Urutan bulan
+  data_keluhan$Batas_SLA <- data_keluhan$Tanggal + 3
 }
 
 # Header
@@ -124,9 +125,24 @@ body <- dashboardBody(
     tabItem(
       tabName = "sla_monitoring",
       fluidRow(
+        # Value Box - SLA Compliance
+        valueBoxOutput("sla_compliance_box", width = 4)
+      ),
+      fluidRow(
+        # Alert - Keluhan Hampir Melewati SLA
         box(
-          title = "Keluhan Hampir Melampaui SLA",
+          title = "Keluhan yang Hampir Melewati SLA",
+          status = "warning",
+          solidHeader = TRUE,
           dataTableOutput("keluhan_hampir_sla"),
+          width = 12
+        )
+      ),
+      fluidRow(
+        # Grafik - SLA per Kategori Keluhan
+        box(
+          title = "Grafik SLA per Kategori Keluhan",
+          plotlyOutput("grafik_sla_kategori"),
           width = 12
         )
       )
@@ -229,56 +245,106 @@ server <- function(input, output, session) {
   })
   
 
-# Bar Chart Frekuensi Produk
-output$bar_chart_produk <- renderPlotly({
-  data_produk <- complaints_data() %>%
-    group_by(Produk_Terkait) %>%
-    summarise(Jumlah_Keluhan = n(), .groups = 'drop') %>%
-    arrange(desc(Jumlah_Keluhan))
+  # Bar Chart - Frekuensi Keluhan per Produk with Automatic Color Assignment
+  output$bar_chart_produk <- renderPlotly({
+    data_produk <- data_keluhan %>%
+      group_by(Produk_Terkait) %>%
+      summarise(Jumlah_Keluhan = n()) %>%
+      arrange(desc(Jumlah_Keluhan))
+    
+    # Use 'color' to differentiate each product category
+    plot_ly(data = data_produk, 
+            x = ~Produk_Terkait, 
+            y = ~Jumlah_Keluhan, 
+            type = 'bar', 
+            color = ~Produk_Terkait,  # This ensures each product has a unique color
+            colors = c("makeup" = "#f34c9d", "skincare" = "#f7c8dc", 
+                       "haircare" = "#fba37f", "bodycare" = "#c7cefc", "alat makeup" = "orange")) %>%  # Customize colors for each product
+      layout(title = "Frekuensi Keluhan per Produk", 
+             xaxis = list(title = "Produk"), 
+             yaxis = list(title = "Jumlah Keluhan"))
+  })
   
-  plot_ly(data = data_produk, x = ~Produk_Terkait, y = ~Jumlah_Keluhan, type = 'bar') %>%
-    layout(title = "Keluhan per Produk", xaxis = list(title = "Produk"), yaxis = list(title = "Jumlah Keluhan"))
-})
-
-# Download Report
-output$download_report <- downloadHandler(
-  filename = function() {
-    paste("laporan_keluhan_", Sys.Date(), ".csv", sep = "")
-  },
-  content = function(file) {
-    write.csv(complaints_data(), file, row.names = FALSE)
+  output$summary_report <- renderDataTable({
+    datatable(
+      complaints_data(),
+      options = list(
+        autoWidth = TRUE,
+        scrollX = TRUE,
+        pageLength = 10,
+        dom = 'Bfrtip',
+        buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+        columnDefs = list(list(width = '20%', targets = c(0, 1)))  # Setel lebar kolom tertentu
+      ),
+      caption = "Ringkasan Keluhan",
+      rownames = FALSE
+    )
+  })
+  
+  
+  # Download Report
+  output$download_report <- downloadHandler(
+    filename = function() {
+      paste("laporan_keluhan_", Sys.Date(), ".csv", sep = "")
+    },
+    content = function(file) {
+      write.csv(complaints_data(), file, row.names = FALSE)
+    }
+  )
+  
+  # SLA MONITORING
+  observe({
+    sla_data <- complaints_data() %>%
+      mutate(SLA_Compliant = ifelse(Tanggal + 3 >= Sys.Date() & Status_Keluhan == "Selesai", 1, 0))
+    
+    sla_compliance <- round(mean(sla_data$SLA_Compliant, na.rm = TRUE) * 100, 2)
+    
+    # SLA Compliance Value Box
+    output$sla_compliance_box <- renderValueBox({
+      valueBox(
+        paste0(sla_compliance, "%"),
+        subtitle = "SLA Compliance",
+        color = "purple",
+        icon = icon("thumbs-up")
+      )
+    })
+    
+    # Table for Keluhan Hampir Melewati SLA
+    output$keluhan_hampir_sla <- renderDataTable({
+      hampir_sla <- sla_data %>%
+        filter(Status_Keluhan != "Selesai" & Batas_SLA <= Sys.Date() + 3) %>%
+        select(Tanggal, Keluhan, Produk_Terkait, Agen, Batas_SLA)
+      
+      datatable(hampir_sla, options = list(pageLength = 5, dom = 'tip'), caption = "Keluhan yang mendekati SLA")
+    })
+    
+    # SLA per Kategori Keluhan Chart
+    output$grafik_sla_kategori <- renderPlotly({
+      sla_kategori <- sla_data %>%
+        group_by(Keluhan) %>%
+        summarise(Percentage_SLA_Compliant = mean(SLA_Compliant, na.rm = TRUE) * 100)
+      
+      plot_ly(data = sla_kategori, x = ~Keluhan, y = ~Percentage_SLA_Compliant, type = 'bar') %>%
+        layout(title = "Persentase SLA per Kategori Keluhan", xaxis = list(title = "Kategori Keluhan"), yaxis = list(title = "Persentase SLA Compliance"))
+    })
+  })
+  
+ 
+  # Kinerja Agen
+  output$performance_agen <- renderDataTable({
+    agen_summary <- complaints_data() %>%
+      group_by(Agen) %>%
+      summarise(Keluhan_Terselesaikan = sum(Status_Keluhan == "Selesai", na.rm = TRUE))
+    
+    datatable(
+      agen_summary,
+      options = list(pageLength = 5, dom = 'tip'),
+      caption = "Kinerja Penyelesaian Keluhan oleh Agen"
+    )
+  })
   }
-)
-
-# SLA Monitoring
-output$keluhan_hampir_sla <- renderDataTable({
-  datatable(
-    complaints_data()[complaints_data()$Tanggal >= Sys.Date() - 3, ],
-    options = list(pageLength = 5, dom = 'tip'),
-    caption = "Keluhan yang mendekati SLA"
-  )
-})
-
-# Kinerja Agen
-output$performance_agen <- renderDataTable({
-  agen_summary <- complaints_data() %>%
-    group_by(Agen) %>%
-    summarise(Keluhan_Terselesaikan = sum(Status_Keluhan == "Selesai", na.rm = TRUE))
   
-  datatable(
-    agen_summary,
-    options = list(pageLength = 5, dom = 'tip'),
-    caption = "Kinerja Penyelesaian Keluhan oleh Agen"
-  )
-})
-
-# Laporan Summary
-output$summary_report <- renderDataTable({
-  datatable(complaints_data())
-})
-}
 
 # Jalankan aplikasi
 shinyApp(ui = ui, server = server)
 
-    
