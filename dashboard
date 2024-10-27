@@ -74,27 +74,27 @@ data_keluhan <- data_keluhan %>%
                                  breaks = c(0, 1, 6, 12, Inf), 
                                  labels = c("< 1 Jam", "1-6 Jam", "6-12 Jam", "> 12 Jam")))
 
-
-# Header
+#HEADER
 header <- dashboardHeader(
   title = "Dashboard Kinerja Agen",
   skin = "light",
-  status = "primary",
+  status = "black",
   
   tags$li(
     class = "nav-item dropdown",
-    style = "position: absolute; left: 40px; margin-top: -23px;",  # Mengangkat ikon sedikit
+    style = "position: absolute; left: 33px; margin-top: -22px;",  # Mengangkat ikon sedikit
     tags$a(
       href = "#", class = "nav-link notification-icon", `data-toggle` = "dropdown",
       icon("bell"), tags$span(class = "badge badge-danger navbar-badge", textOutput("notification_count"))
     ),
     tags$div(
       class = "dropdown-menu dropdown-menu-left notification-dropdown",
-      style = "width: 300px; max-height: 300px; overflow-y: auto; white-space: normal;",
+      style = "width: 500px; max-height: 300px; overflow-y: auto; white-space: normal;",
       uiOutput("notification_items")
     )
   )
 )
+
 
 # Sidebar
 sidebar <- dashboardSidebar(
@@ -130,9 +130,17 @@ body <- dashboardBody(
         padding: 20px;
         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       }
+      /* Sidebar color for both light and dark mode */
       .main-sidebar {
-        background-color: #f8bbd0;
+        background-color: #f8bbd0 !important;
+        color: #333333 !important;
       }
+      /* Sidebar text color for dark mode */
+      body.dark-mode .main-sidebar, 
+      body.dark-mode .main-sidebar .nav-link {
+        color: #000000 !important; /* Mengubah warna teks sidebar menjadi hitam pada mode gelap */
+      }
+      /* Navbar background and text color */
       .navbar, .navbar-light, .main-header .navbar .navbar-nav {
         background-color: #f8bbd0 !important;
       }
@@ -140,6 +148,7 @@ body <- dashboardBody(
       .main-header .navbar .navbar-brand {
         color: #333333 !important;
       }
+      /* Dropdown menu adjustments */
       .dropdown-menu {
         background-color: #f8f9fa;
         padding: 10px;
@@ -154,6 +163,7 @@ body <- dashboardBody(
       .navbar-badge {
         font-size: 12px;
       }
+      /* Dark mode dropdown adjustments */
       body.dark-mode .dropdown-menu {
         background-color: #333333;
         color: #e0e0e0;
@@ -162,8 +172,22 @@ body <- dashboardBody(
         border-bottom: 1px solid #555;
         color: #e0e0e0;
       }
+      /* Navbar link color in dark mode */
       body.dark-mode .navbar .nav-link {
         color: #e0e0e0;
+      }
+      /* Ganti warna box 'pink' menjadi #FCD2D9 */
+        .small-box.bg-pink { background-color: #FCD2D9 !important; color: #000 !important; }
+
+        /* Ganti warna box 'purple' menjadi #E5C5F1 */
+        .small-box.bg-purple { background-color: #E5C5F1 !important; color: #000 !important; }
+
+        /* Ganti warna box 'lightblue' menjadi #E1EBFF */
+        .small-box.bg-lightblue { background-color: #E1EBFF !important; color: #000 !important; }
+        
+        /* Mengubah warna teks dalam valueBox dengan latar belakang biru muda */
+      .bg-lightblue .small-box h3, .bg-lightblue .small-box p {
+        color: #000000 !important; /* Mengubah teks menjadi hitam */
       }
     "))
   ),
@@ -174,7 +198,7 @@ body <- dashboardBody(
       fluidRow(
         box(
           title = "Welcome!",
-          status = "primary",
+          status = "pink",
           solidHeader = TRUE,
           width = 12,
           align = "center",
@@ -197,6 +221,7 @@ body <- dashboardBody(
       fluidRow(
         box(
           title = "Grafik Tren Keluhan Bulanan per Kategori",
+          status = "pink",
           elevation = 4,
           plotlyOutput("grafik_tren_keluhan"),
           width = 12
@@ -210,12 +235,14 @@ body <- dashboardBody(
       fluidRow(
         box(
           title = "Distribusi Kategori Keluhan",
+          status = "pink",
           elevation = 4,
           plotlyOutput("pie_chart_keluhan"),
           width = 6
         ),
         box(
           title = "Frekuensi Keluhan per Produk",
+          status = "pink",
           plotlyOutput("bar_chart_produk"),
           width = 6
         )
@@ -223,6 +250,7 @@ body <- dashboardBody(
       fluidRow(
         box(
           title = "Tabel Keluhan",
+          status = "pink",
           uiOutput("summary_report"),
           width = 12
         ),
@@ -236,13 +264,14 @@ body <- dashboardBody(
       fluidRow(
         box(
           title = "Keluhan yang Hampir Melewati SLA",
-          status = "warning",
+          status = "pink",
           solidHeader = TRUE,
           dataTableOutput("keluhan_hampir_sla"),
           width = 12
         ),
         box(
           title = "Grafik SLA per Kategori Keluhan",
+          status = "pink",
           plotOutput("grafik_sla_kategori"),
           width = 12
         )
@@ -261,12 +290,14 @@ body <- dashboardBody(
         # Bar chart for number of complaints handled per agent
         box(
           title = "Jumlah Keluhan Ditangani per Agen",
+          status = "pink",
           elevation = 4,
           plotlyOutput("bar_chart_keluhan_agen"),
           width = 6
         ),
         box(
           title = "Diagram Lingkaran Rata-rata CSAT per Agen",
+          status = "pink",
           elevation = 4,
           plotlyOutput("pie_chart_csat_per_agent"),
           width = 6
@@ -276,12 +307,14 @@ body <- dashboardBody(
       fluidRow(
         box(
           title = "Tren NPS Bulanan",
+          status = "pink",
           elevation = 4,
           plotlyOutput("monthly_nps_trend"),
           width = 6
         ),
         box(
           title = "Grafik Agen dengan Keluhan Terselesaikan",
+          status = "pink",
           elevation = 4,
           plotlyOutput("grafik_agen_keluhan"),
           width = 6,
@@ -296,12 +329,14 @@ body <- dashboardBody(
       fluidRow(
         box(
           title = "Distribusi Keluhan berdasarkan Saluran",
+          status = "pink",
           elevation = 4,
           plotlyOutput("pie_chart_channel"),
           width = 6
         ),
         box(
           title = "Waktu Respon per Saluran",
+          status = "pink",
           elevation = 4,
           plotOutput("heatmap_response_time"),
           width = 6
@@ -310,6 +345,7 @@ body <- dashboardBody(
       fluidRow(
         box(
           title = "Efisiensi Penyelesaian per Saluran",
+          status = "pink",
           elevation = 4,
           plotlyOutput("efficiency_per_channel"),
           width = 12
@@ -323,16 +359,19 @@ body <- dashboardBody(
       fluidRow(
         box(
           title = "Sentiment Comparison per Product",
+          status = "pink",
           width = 12,
           plotlyOutput("sentiment_plot")
         ),
         box(
           title = "Detailed Sentiment Data",
+          status = "pink",
           width = 12,
           DTOutput("sentiment_table")
         ),
         box(
           title = "Analisis Tren Sentimen Waktu",
+          status = "pink",
           width = 12,
           plotlyOutput("trend_sentiment_plot")
         )
@@ -345,11 +384,13 @@ body <- dashboardBody(
       fluidRow(
         box(
           title = "Pilih Wilayah",
+          status = "pink",
           width = 12,
           selectInput("wilayah", "Pilih Wilayah:", choices = unique(data_segmentasi$Segmentasi_Wilayah), selected = NULL, multiple = TRUE)
         ),
         box(
           title = "Segmentasi Sentimen Berdasarkan Wilayah",
+          status = "pink",
           width = 12,
           plotlyOutput("plotSentimen")
         )
@@ -361,12 +402,14 @@ body <- dashboardBody(
       fluidRow(
         box(
           title = "Distribusi Waktu Respon",
+          status = "pink",
           elevation = 4,
           plotlyOutput("response_time_distribution"),
           width = 6
         ),
         box(
           title = "Analitik Waktu Respon",
+          status = "pink",
           elevation = 4,
           plotOutput("circlePlot"),
           width = 6
@@ -387,6 +430,7 @@ ui <- dashboardPage(
 
 # Server
 server <- function(input, output, session) {
+  
   # Data keluhan yang diolah dalam reactive expression
   complaints_data <- reactive({
     data <- data_keluhan
@@ -395,6 +439,35 @@ server <- function(input, output, session) {
     data$Batas_SLA <- data$Tanggal + 3
     data$SLA_Compliant <- ifelse(data$Status_Keluhan == "Selesai" & data$Tanggal <= data$Batas_SLA, 1, 0)
     data
+  })
+  
+  # Data notifikasi dengan waktu relatif
+  notification_data <- reactiveVal(data.frame(
+    message = c(
+      "Kamu punya 5 keluhan yang belum diselesaikan.",
+      "Ada 2 keluhan prioritas tinggi yang perlu segera ditangani.",
+      "Kamu belum memberikan tanggapan terhadap 3 keluhan terbaru."
+    ),
+    date = Sys.time() - c(600, 1800, 3600)  # Contoh: 10 menit, 30 menit, dan 1 jam yang lalu
+  ))
+  
+  # Fungsi untuk format waktu relatif
+  format_time_relative <- function(time) {
+    diff <- difftime(Sys.time(), time, units = "mins")
+    mins <- as.numeric(diff)
+    
+    if (mins < 1) {
+      return("Baru saja")
+    } else if (mins < 60) {
+      return(paste(round(mins), "menit yang lalu"))
+    } else {
+      hours <- floor(mins / 60)
+      return(paste(hours, "jam yang lalu"))
+    }
+  }
+  
+  output$notification_count <- renderText({
+    nrow(notification_data())
   })
   
   output$notification_items <- renderUI({
@@ -408,26 +481,15 @@ server <- function(input, output, session) {
       lapply(1:nrow(notifications), function(i) {
         tags$div(
           class = "dropdown-item",
-          tags$div(
-            tags$span(
-              icon("exclamation-circle"), # Ikon untuk notifikasi penting
-              style = "color: #ff9800; margin-right: 10px;" # Warna sesuai tingkat kepentingan
-            ),
-            tags$div(
-              tags$p(
-                tags$strong(notifications$message[i]), # Pesan notifikasi
-                style = "margin: 0;"
-              ),
-              tags$small(
-                class = "float-right text-muted",
-                format(notifications$date[i], "%d %b %Y, %H:%M") # Format tanggal lebih ringkas
-              )
-            )
+          tags$p(
+            tags$strong(notifications$message[i]),
+            tags$span(class = "float-right text-muted text-sm", format_time_relative(notifications$date[i]))
           )
         )
       })
     )
   })
+  
   
   
   # Debugging untuk jumlah data
@@ -447,27 +509,27 @@ server <- function(input, output, session) {
     
     # Value Boxes
     output$total_keluhan_box <- renderValueBox({
-      valueBox(value = total_keluhan, subtitle = "Total Keluhan", color = "warning", icon = icon("exclamation-triangle"))
+      valueBox(value = total_keluhan, subtitle = "Total Keluhan", color = "pink", icon = icon("exclamation-triangle"))
     })
     
     output$penyelesaian_keluhan_box <- renderValueBox({
-      valueBox(value = paste0(round(rata2_penyelesaian_keluhan * 100), "%"), subtitle = "Tingkat Penyelesaian", color = "success", icon = icon("check-circle"))
+      valueBox(value = paste0(round(rata2_penyelesaian_keluhan * 100), "%"), subtitle = "Tingkat Penyelesaian", color = "lightblue", icon = icon("check-circle"))
     })
     
     output$waktu_respon_box <- renderValueBox({
-      valueBox(value = round(rata2_waktu_respon, 2), subtitle = "Waktu Respon Rata-rata (Jam)", color = "primary", icon = icon("clock"))
+      valueBox(value = round(rata2_waktu_respon, 2), subtitle = "Waktu Respon Rata-rata (Jam)", color = "purple", icon = icon("clock"))
     })
     
     output$sla_compliance_box <- renderValueBox({
-      valueBox(value = paste0(sla_compliance, "%"), subtitle = "SLA Compliance", color = "purple", icon = icon("thumbs-up"))
+      valueBox(value = paste0(sla_compliance, "%"), subtitle = "SLA Compliance", color = "pink", icon = icon("thumbs-up"))
     })
     
     output$csat_score_box <- renderValueBox({
-      valueBox(value = round(rata2_csat, 1), subtitle = "CSAT Score", color = "info", icon = icon("smile"))
+      valueBox(value = round(rata2_csat, 1), subtitle = "CSAT Score", color = "lightblue", icon = icon("smile"))
     })
     
     output$nps_score_box <- renderValueBox({
-      valueBox(value = round(rata2_nps, 1), subtitle = "NPS Score", color = "danger", icon = icon("heart"))
+      valueBox(value = round(rata2_nps, 1), subtitle = "NPS Score", color = "purple", icon = icon("heart"))
     })
   })
   
@@ -639,10 +701,17 @@ server <- function(input, output, session) {
       summarise(Jumlah_Keluhan = n()) %>%
       arrange(desc(Jumlah_Keluhan))
     
-    plot_ly(data = agen_summary, x = ~Agen, y = ~Jumlah_Keluhan, type = 'bar') %>%
-      layout(title = "Jumlah Keluhan Ditangani per Agen",
-             xaxis = list(title = "Agen"),
-             yaxis = list(title = "Jumlah Keluhan Ditangani"))
+    # Warna gradasi pink-ungu-biru
+    warna_gradien <- c("#f098b5", "#BBB7E5", "#f2bce1", "#c79cda", "#8a77c8")
+    
+    # Membuat bar chart dengan warna gradasi
+    plot_ly(data = agen_summary, x = ~Agen, y = ~Jumlah_Keluhan, type = 'bar', 
+            marker = list(color = warna_gradien)) %>%
+      layout(
+        title = "Jumlah Keluhan Ditangani per Agen",
+        xaxis = list(title = "Agen"),
+        yaxis = list(title = "Jumlah Keluhan Ditangani")
+      )
   })
   
   
@@ -653,7 +722,7 @@ server <- function(input, output, session) {
     valueBox(
       value = paste0(round(avg_resolution_time, 2), " hari"),
       subtitle = "Rata-rata Waktu Penyelesaian",
-      color = "primary",
+      color = "pink",
       icon = icon("clock")
     )
   })
@@ -666,11 +735,24 @@ server <- function(input, output, session) {
       summarise(Keluhan_Terselesaikan = n()) %>%
       arrange(desc(Keluhan_Terselesaikan))
     
-    plot_ly(data = agen_summary, x = ~Agen, y = ~Keluhan_Terselesaikan, type = 'bar') %>%
-      layout(title = "Agen dengan Jumlah Keluhan Terselesaikan",
-             xaxis = list(title = "Agen"),
-             yaxis = list(title = "Jumlah Keluhan Terselesaikan"))
+    # Warna gradasi pink-ungu-biru
+    warna_gradien <- c("#BBB7E5", "#8a77c8", "#f098b5","#f2bce1","#c79cda")
+    
+    # Membuat grafik batang dengan warna gradasi
+    plot_ly(
+      data = agen_summary,
+      x = ~Agen,
+      y = ~Keluhan_Terselesaikan,
+      type = 'bar',
+      marker = list(color = warna_gradien) # Menambahkan warna gradasi
+    ) %>%
+      layout(
+        title = "Agen dengan Jumlah Keluhan Terselesaikan",
+        xaxis = list(title = "Agen"),
+        yaxis = list(title = "Jumlah Keluhan Terselesaikan")
+      )
   })
+  
   
   
   # --- Diagram Lingkaran Rata-rata CSAT per Agen ---
@@ -680,6 +762,9 @@ server <- function(input, output, session) {
       group_by(Agen) %>%
       summarise(Rata_CSAT = mean(Rating_CSAT, na.rm = TRUE))
     
+    # Warna gradasi pink-ungu-biru
+    warna_gradien <- c("#8a77c8","#f098b5", "#c79cda", "#BBB7E5", "#f2bce1")
+    
     # Membuat diagram lingkaran
     plot_ly(
       data = csat_per_agent,
@@ -687,13 +772,15 @@ server <- function(input, output, session) {
       values = ~Rata_CSAT,
       type = 'pie',
       textinfo = 'label+percent',
-      insidetextorientation = 'radial'
+      insidetextorientation = 'radial',
+      marker = list(colors = warna_gradien) # Menambahkan warna gradasi
     ) %>%
       layout(
         title = "Rata-rata CSAT per Agen",
         showlegend = TRUE
       )
   })
+  
   
   # --- Grafik Tren NPS Bulanan ---
   output$monthly_nps_trend <- renderPlotly({
@@ -707,14 +794,15 @@ server <- function(input, output, session) {
       summarise(Rata_NPS = mean(NPS_Score, na.rm = TRUE)) %>%
       arrange(Bulan)
     
-    # Membuat grafik garis
+    # Membuat grafik garis dengan gradasi warna pink-ungu-biru
     plot_ly(
       data = nps_trend,
       x = ~Bulan,
       y = ~Rata_NPS,
       type = 'scatter',
       mode = 'lines+markers',
-      line = list(shape = "linear")
+      line = list(color = "#8a77c8", width = 2),  # Menggunakan warna gradasi pink-ungu-biru
+      marker = list(color = "#8a77c8", size = 8)  # Warna marker juga disesuaikan
     ) %>%
       layout(
         title = "Tren NPS Bulanan",
@@ -725,6 +813,7 @@ server <- function(input, output, session) {
   })
   
   
+  
   # --- Analisis Saluran (Channel Analysis) ---
   # Pie chart untuk distribusi keluhan berdasarkan saluran
   output$pie_chart_channel <- renderPlotly({
@@ -732,9 +821,14 @@ server <- function(input, output, session) {
       group_by(Saluran) %>%
       summarise(Jumlah_Keluhan = n())
     
-    plot_ly(data = data_channel, labels = ~Saluran, values = ~Jumlah_Keluhan, type = 'pie') %>%
+    # Menggunakan warna gradien pink dan ungu-biru
+    warna_gradien <- c("#bdb9f6", "#BDE0FE","#FFC8DD","#CBD5F7")
+    
+    plot_ly(data = data_channel, labels = ~Saluran, values = ~Jumlah_Keluhan, type = 'pie',
+            marker = list(colors = warna_gradien)) %>%
       layout(title = "Distribusi Keluhan berdasarkan Saluran")
   })
+  
   
   # Bar chart waktu respon per saluran
   output$heatmap_response_time <- renderPlot({
@@ -744,16 +838,17 @@ server <- function(input, output, session) {
     
     ggplot(data_response, aes(x = Saluran, y = "Waktu Respon", fill = Rata_Waktu_Respon)) +
       geom_tile(color = "white") +
-      scale_fill_gradient(low = "#fa80b9", high = "#bdb9f6") +
+      scale_fill_gradientn(colors = c("#FFC8DD", "#BDE0FE", "#CBD5F7", "#bdb9f6")) +  # Menggunakan gradien warna
       labs(
         title = "Heatmap Rata-rata Waktu Respon per Saluran",
         x = "Saluran",
-        y = "",
+        y = "",  
         fill = "Waktu Respon (jam)"
       ) +
       theme_minimal(base_size = 14) +
       theme(axis.text.y = element_blank())
   })
+  
   
   
   # Grafik efisiensi penyelesaian per saluran
@@ -762,11 +857,16 @@ server <- function(input, output, session) {
       group_by(Saluran) %>%
       summarise(Efisiensi = mean(Persentase_Penyelesaian, na.rm = TRUE))
     
-    plot_ly(data = data_efficiency, x = ~Saluran, y = ~Efisiensi, type = 'bar') %>%
+    # Menggunakan warna gradien pink-ungu-biru
+    warna_gradien <- c("#bdb9f6", "#BDE0FE", "#FFC8DD", "#CBD5F7")
+    
+    plot_ly(data = data_efficiency, x = ~Saluran, y = ~Efisiensi, type = 'bar',
+            marker = list(color = warna_gradien)) %>%
       layout(title = "Efisiensi Penyelesaian per Saluran",
              xaxis = list(title = "Saluran"),
              yaxis = list(title = "Persentase Penyelesaian (%)"))
   })
+  
   
   #Sentimen Analisis
   #sentimen per produk berdasarkan rating CSAT
