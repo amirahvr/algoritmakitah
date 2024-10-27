@@ -76,7 +76,6 @@ data_keluhan <- data_keluhan %>%
 
 #HEADER
 header <- dashboardHeader(
-  title = "Dashboard Kinerja Agen",
   skin = "light",
   status = "black",
   
@@ -183,7 +182,7 @@ body <- dashboardBody(
         .small-box.bg-purple { background-color: #E5C5F1 !important; color: #000 !important; }
 
         /* Ganti warna box 'lightblue' menjadi #E1EBFF */
-        .small-box.bg-lightblue { background-color: #E1EBFF !important; color: #000 !important; }
+        .small-box.bg-lightblue { background-color: #E1EBFF !important; color: #000 !important; }
         
         /* Mengubah warna teks dalam valueBox dengan latar belakang biru muda */
       .bg-lightblue .small-box h3, .bg-lightblue .small-box p {
