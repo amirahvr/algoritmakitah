@@ -74,14 +74,14 @@ data_keluhan <- data_keluhan %>%
                                  breaks = c(0, 1, 6, 12, Inf), 
                                  labels = c("< 1 Jam", "1-6 Jam", "6-12 Jam", "> 12 Jam")))
 
-#HEADER
 header <- dashboardHeader(
   skin = "light",
   status = "black",
   
+  # Notifikasi yang sudah ada
   tags$li(
     class = "nav-item dropdown",
-    style = "position: absolute; left: 33px; margin-top: -22px;",  # Mengangkat ikon sedikit
+    style = "position: absolute; left: 33px; margin-top: -22px;",
     tags$a(
       href = "#", class = "nav-link notification-icon", `data-toggle` = "dropdown",
       icon("bell"), tags$span(class = "badge badge-danger navbar-badge", textOutput("notification_count"))
@@ -90,7 +90,7 @@ header <- dashboardHeader(
       class = "dropdown-menu dropdown-menu-left notification-dropdown",
       style = "width: 500px; max-height: 300px; overflow-y: auto; white-space: normal;",
       uiOutput("notification_items")
-    )
+    ),
   )
 )
 
@@ -98,6 +98,17 @@ header <- dashboardHeader(
 # Sidebar
 sidebar <- dashboardSidebar(
   skin = "light",
+  tags$div(
+    class = "sidebar-profile",
+    style = "text-align: center; padding: 10px 3px;",
+    tags$img(
+      src = "https://berita.99.co/wp-content/uploads/2023/07/tugas-customer-service.jpg",
+      class = "profile-pic-sidebar",
+      style = "margin-bottom: 10px;"  # Menambahkan jarak antara gambar dan nama pengguna
+    ),
+    tags$h4("Agen 1", class = "profile-name", style = "color: #333333; font-size: 16px; margin: 0;")  # Mengubah ukuran font dan margin nama pengguna
+  ),
+  
   sidebarMenu(
     menuItem("Overview", tabName = "overview", icon = icon("dashboard")),
     menuItem("Complaints Analytics", tabName = "complaints_analytics", icon = icon("chart-bar")),
@@ -107,62 +118,69 @@ sidebar <- dashboardSidebar(
     menuItem("Sentiment Analysis", tabName = "sentiment_analysis", icon = icon("smile")),
     menuItem("Region Segmentation", tabName = "region_segmentation", icon = icon("map-marked-alt")),
     menuItem("Response Analytics", tabName = "response_analytics", icon = icon("chart-pie"))
-  ),
+  )
 )
 
-# Body dengan CSS Custom yang lebih spesifik
+# Body dengan CSS Custom yang lebih rapi dan terstruktur
 body <- dashboardBody(
   tags$head(
     tags$style(HTML("
       body {
         background-color: #fce4ec;
       }
+      /* CSS untuk gambar profil bulat di sidebar */
+      .profile-pic-sidebar {
+        width: 53px;  /* Mengubah ukuran gambar agar lebih proporsional */
+        height: 53px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #333333;
+        transition: width 0.3s, height 0.3s;
+      }
+      
+      /* CSS saat sidebar ditutup */
+      .sidebar-closed .profile-pic-sidebar {
+        width: 10px;
+        height: 10px;
+      }
+      .sidebar-closed .profile-name {
+        display: none;
+      }
+
+      .profile-name {
+        font-size: 13px;  /* Mengubah ukuran font nama */
+        font-weight: bold;
+        color: #333333;
+        transition: opacity 0.3s;
+      }
+      
+      /* Box styling untuk background dan shadow */
       .box {
         background-color: #f8bbd0;
         border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       }
+      
+      /* Warna gradasi untuk welcome box */
       .welcome-box {
-        background: linear-gradient(to right, #f48fb1 0%, #f8bbd0 100%);
+        background: linear-gradient(to right, #f48fb1, #f8bbd0);
         color: #ffffff;
         border-radius: 10px;
         padding: 20px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
       }
-      /* Sidebar color for both light and dark mode */
+
+      /* Warna latar sidebar */
       .main-sidebar {
         background-color: #f8bbd0 !important;
         color: #333333 !important;
       }
-      /* Sidebar text color for dark mode */
+      
+      /* Warna teks dan dropdown pada dark mode */
       body.dark-mode .main-sidebar, 
       body.dark-mode .main-sidebar .nav-link {
-        color: #000000 !important; /* Mengubah warna teks sidebar menjadi hitam pada mode gelap */
+        color: #000000 !important;
       }
-      /* Navbar background and text color */
-      .navbar, .navbar-light, .main-header .navbar .navbar-nav {
-        background-color: #f8bbd0 !important;
-      }
-      .main-header .navbar .nav-link, 
-      .main-header .navbar .navbar-brand {
-        color: #333333 !important;
-      }
-      /* Dropdown menu adjustments */
-      .dropdown-menu {
-        background-color: #f8f9fa;
-        padding: 10px;
-      }
-      .dropdown-item {
-        padding: 8px 12px;
-        border-bottom: 1px solid #ddd;
-      }
-      .dropdown-item:last-child {
-        border-bottom: none;
-      }
-      .navbar-badge {
-        font-size: 12px;
-      }
-      /* Dark mode dropdown adjustments */
       body.dark-mode .dropdown-menu {
         background-color: #333333;
         color: #e0e0e0;
@@ -171,23 +189,33 @@ body <- dashboardBody(
         border-bottom: 1px solid #555;
         color: #e0e0e0;
       }
-      /* Navbar link color in dark mode */
-      body.dark-mode .navbar .nav-link {
-        color: #e0e0e0;
-      }
-      /* Ganti warna box 'pink' menjadi #FCD2D9 */
-        .small-box.bg-pink { background-color: #FCD2D9 !important; color: #000 !important; }
 
-        /* Ganti warna box 'purple' menjadi #E5C5F1 */
-        .small-box.bg-purple { background-color: #E5C5F1 !important; color: #000 !important; }
-
-        /* Ganti warna box 'lightblue' menjadi #E1EBFF */
-        .small-box.bg-lightblue { background-color: #E1EBFF !important; color: #000 !important; }
-        
-        /* Mengubah warna teks dalam valueBox dengan latar belakang biru muda */
+      /* Ganti warna box untuk tema */
+      .small-box.bg-pink { background-color: #FCD2D9 !important; color: #000 !important; }
+      .small-box.bg-purple { background-color: #E5C5F1 !important; color: #000 !important; }
+      .small-box.bg-lightblue { background-color: #E1EBFF !important; color: #000 !important; }
+      
+      /* Warna teks valueBox */
       .bg-lightblue .small-box h3, .bg-lightblue .small-box p {
-        color: #000000 !important; /* Mengubah teks menjadi hitam */
+        color: #000000 !important;
       }
+    ")),
+    
+    tags$script(HTML("
+      $(document).on('shiny:connected', function() {
+        var body = $('body');
+        
+        // Pantau klik pada tombol toggle sidebar
+        $('.main-header .sidebar-toggle').on('click', function() {
+          setTimeout(function() {
+            if (body.hasClass('sidebar-collapse')) {
+              body.addClass('sidebar-closed');
+            } else {
+              body.removeClass('sidebar-closed');
+            }
+          }, 300);
+        });
+      });
     "))
   ),
   
@@ -198,6 +226,7 @@ body <- dashboardBody(
         box(
           title = "Welcome!",
           status = "pink",
+          elevation = 4,
           solidHeader = TRUE,
           width = 12,
           align = "center",
@@ -242,6 +271,7 @@ body <- dashboardBody(
         box(
           title = "Frekuensi Keluhan per Produk",
           status = "pink",
+          elevation = 4,
           plotlyOutput("bar_chart_produk"),
           width = 6
         )
@@ -250,6 +280,7 @@ body <- dashboardBody(
         box(
           title = "Tabel Keluhan",
           status = "pink",
+          elevation = 4,
           uiOutput("summary_report"),
           width = 12
         ),
@@ -264,6 +295,7 @@ body <- dashboardBody(
         box(
           title = "Keluhan yang Hampir Melewati SLA",
           status = "pink",
+          elevation = 4,
           solidHeader = TRUE,
           dataTableOutput("keluhan_hampir_sla"),
           width = 12
@@ -271,6 +303,7 @@ body <- dashboardBody(
         box(
           title = "Grafik SLA per Kategori Keluhan",
           status = "pink",
+          elevation = 4,
           plotOutput("grafik_sla_kategori"),
           width = 12
         )
@@ -359,18 +392,21 @@ body <- dashboardBody(
         box(
           title = "Sentiment Comparison per Product",
           status = "pink",
+          elevation = 4,
           width = 12,
           plotlyOutput("sentiment_plot")
         ),
         box(
           title = "Detailed Sentiment Data",
           status = "pink",
+          elevation = 4,
           width = 12,
           DTOutput("sentiment_table")
         ),
         box(
           title = "Analisis Tren Sentimen Waktu",
           status = "pink",
+          elevation = 4,
           width = 12,
           plotlyOutput("trend_sentiment_plot")
         )
@@ -384,12 +420,14 @@ body <- dashboardBody(
         box(
           title = "Pilih Wilayah",
           status = "pink",
+          elevation = 4,
           width = 12,
           selectInput("wilayah", "Pilih Wilayah:", choices = unique(data_segmentasi$Segmentasi_Wilayah), selected = NULL, multiple = TRUE)
         ),
         box(
           title = "Segmentasi Sentimen Berdasarkan Wilayah",
           status = "pink",
+          elevation = 4,
           width = 12,
           plotlyOutput("plotSentimen")
         )
