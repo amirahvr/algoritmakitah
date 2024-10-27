@@ -35,7 +35,6 @@ analisis_sentimen <- function(text) {
   }
 }
 
-# Mengkategorikan sentimen berdasarkan nilai Rating_CSAT
 # Asumsi: Rating_CSAT di atas 3 dianggap positif, 3 ke bawah negatif
 data_keluhan <- data_keluhan %>%
   mutate(Sentimen_Rating = ifelse(Rating_CSAT > 3, "Positif", "Negatif"))
@@ -50,24 +49,49 @@ data_segmentasi <- data_keluhan %>%
   group_by(Segmentasi_Wilayah, Sentimen_Rating) %>%
   summarise(Jumlah = n(), .groups = 'drop')
 
+col_name <- "Waktu_Respon"  # Ganti dengan nama kolom waktu respon yang benar
+
+# Cek apakah nama kolom sesuai dengan yang ada di data
+if (!(col_name %in% names(data_keluhan))) {
+  stop(paste("Kolom", col_name, "tidak ditemukan dalam data!"))
+}
+
+# Konversi kolom waktu respon ke tipe numerik
+data_keluhan[[col_name]] <- as.numeric(as.character(data_keluhan[[col_name]]))
+
+# Cek apakah ada nilai NA setelah konversi
+if (sum(is.na(data_keluhan[[col_name]])) > 0) {
+  warning("Ada nilai yang tidak bisa dikonversi ke numerik dan akan dihapus.")
+}
+
+# Buang baris dengan nilai NA
+data_keluhan <- data_keluhan %>%
+  filter(!is.na(.data[[col_name]]))  # Buang baris dengan ResponseTime yang tidak valid
+
+# Buat interval waktu respon untuk 1-6 Jam dan 6-12 Jam
+data_keluhan <- data_keluhan %>%
+  mutate(Interval_Response = cut(.data[[col_name]], 
+                                 breaks = c(0, 1, 6, 12, Inf), 
+                                 labels = c("< 1 Jam", "1-6 Jam", "6-12 Jam", "> 12 Jam")))
+
+
 # Header
 header <- dashboardHeader(
   title = "Dashboard Kinerja Agen",
   skin = "light",
   status = "primary",
   
-  # Tambahkan kolom notifikasi di navbar di kiri
   tags$li(
     class = "nav-item dropdown",
-    style = "position: absolute; right: 10px;", # Posisikan di bagian kiri dekat dark mode
+    style = "position: absolute; left: 40px; margin-top: -23px;",  # Mengangkat ikon sedikit
     tags$a(
-      href = "#", class = "nav-link", `data-toggle` = "dropdown",
+      href = "#", class = "nav-link notification-icon", `data-toggle` = "dropdown",
       icon("bell"), tags$span(class = "badge badge-danger navbar-badge", textOutput("notification_count"))
     ),
     tags$div(
-      class = "dropdown-menu dropdown-menu-left", # Dropdown ke arah kiri
-      style = "width: 300px; max-height: 300px; overflow-y: auto; white-space: normal;", # Maksimal ukuran dan pembatasan
-      uiOutput("notification_items")  # Menampilkan daftar notifikasi
+      class = "dropdown-menu dropdown-menu-left notification-dropdown",
+      style = "width: 300px; max-height: 300px; overflow-y: auto; white-space: normal;",
+      uiOutput("notification_items")
     )
   )
 )
@@ -91,19 +115,14 @@ sidebar <- dashboardSidebar(
 body <- dashboardBody(
   tags$head(
     tags$style(HTML("
-      /* Mengubah warna background body menjadi pastel pink */
       body {
         background-color: #fce4ec;
       }
-      
-      /* Background dan tampilan box */
       .box {
         background-color: #f8bbd0;
         border-radius: 10px;
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
       }
-
-      /* Kotak sambutan */
       .welcome-box {
         background: linear-gradient(to right, #f48fb1 0%, #f8bbd0 100%);
         color: #ffffff;
@@ -111,54 +130,18 @@ body <- dashboardBody(
         padding: 20px;
         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       }
-
-      /* Sidebar */
       .main-sidebar {
         background-color: #f8bbd0;
       }
-
-      /* Navbar Header */
-      .main-header .navbar, .navbar, .navbar-light, .main-header .navbar .navbar-nav {
-        background-color: #f8bbd0 !important; /* Pink pastel */
+      .navbar, .navbar-light, .main-header .navbar .navbar-nav {
+        background-color: #f8bbd0 !important;
       }
-
-      /* Warna teks di Navbar */
       .main-header .navbar .nav-link, 
       .main-header .navbar .navbar-brand {
-        color: #333333 !important; /* Teks warna gelap */
+        color: #333333 !important;
       }
-
-      /* Value Box */
-      .value-box {
-        background-color: #f8bbd0;
-        color: #333333;
-        border-radius: 10px;
-      }
-
-      /* Link dan teks sidebar */
-      .nav-link {
-        color: #333333;
-      }
-      .nav-link:hover {
-        background-color: #f48fb1;
-        color: #ffffff;
-      }
-      
-      /* CSS untuk Dark Mode Sidebar */
-      body.dark-mode .main-sidebar {
-        background-color: #333333 !important; /* Background sidebar dark mode */
-      }
-      body.dark-mode .sidebar-menu .nav-link, 
-      body.dark-mode .sidebar-menu .menu-item {
-        color: #ffffff !important; /* Teks sidebar putih dalam dark mode */
-      }
-      body.dark-mode .sidebar-menu .nav-link:hover {
-        background-color: #555555 !important; /* Hover item sidebar dark mode */
-        color: #ffffff !important;
-      }
-      /* Gaya untuk notifikasi dropdown */
       .dropdown-menu {
-        background-color: #f8f9fa; /* Warna latar dropdown */
+        background-color: #f8f9fa;
         padding: 10px;
       }
       .dropdown-item {
@@ -169,9 +152,8 @@ body <- dashboardBody(
         border-bottom: none;
       }
       .navbar-badge {
-        font-size: 12px; /* Ukuran kecil untuk badge */
+        font-size: 12px;
       }
-      /* Gaya dark mode untuk dropdown */
       body.dark-mode .dropdown-menu {
         background-color: #333333;
         color: #e0e0e0;
@@ -180,13 +162,12 @@ body <- dashboardBody(
         border-bottom: 1px solid #555;
         color: #e0e0e0;
       }
-      /* Gaya tambahan untuk dark mode */
       body.dark-mode .navbar .nav-link {
         color: #e0e0e0;
       }
     "))
   ),
-
+  
   tabItems(
     tabItem(
       tabName = "overview",
@@ -382,7 +363,13 @@ body <- dashboardBody(
           title = "Distribusi Waktu Respon",
           elevation = 4,
           plotlyOutput("response_time_distribution"),
-          width = 12
+          width = 6
+        ),
+        box(
+          title = "Analitik Waktu Respon",
+          elevation = 4,
+          plotOutput("circlePlot"),
+          width = 6
         )
       )
     )
@@ -410,21 +397,6 @@ server <- function(input, output, session) {
     data
   })
   
-  notification_data <- reactiveVal(data.frame(
-    message = c(
-      "Kamu punya 5 keluhan yang belum diselesaikan.",
-      "Ada 2 keluhan prioritas tinggi yang perlu segera ditangani.",
-      "Kamu belum memberikan tanggapan terhadap 3 keluhan terbaru."
-    ),
-    date = Sys.Date()
-  ))
-  
-  # Menghitung jumlah notifikasi
-  output$notification_count <- renderText({
-    nrow(notification_data())
-  })
-  
-  # Menampilkan daftar notifikasi
   output$notification_items <- renderUI({
     notifications <- notification_data()
     
@@ -436,14 +408,27 @@ server <- function(input, output, session) {
       lapply(1:nrow(notifications), function(i) {
         tags$div(
           class = "dropdown-item",
-          tags$p(
-            tags$strong(notifications$message[i]),
-            tags$span(class = "float-right text-muted text-sm", notifications$date[i])
+          tags$div(
+            tags$span(
+              icon("exclamation-circle"), # Ikon untuk notifikasi penting
+              style = "color: #ff9800; margin-right: 10px;" # Warna sesuai tingkat kepentingan
+            ),
+            tags$div(
+              tags$p(
+                tags$strong(notifications$message[i]), # Pesan notifikasi
+                style = "margin: 0;"
+              ),
+              tags$small(
+                class = "float-right text-muted",
+                format(notifications$date[i], "%d %b %Y, %H:%M") # Format tanggal lebih ringkas
+              )
+            )
           )
         )
       })
     )
   })
+  
   
   # Debugging untuk jumlah data
   output$debug <- renderText({
@@ -878,9 +863,20 @@ server <- function(input, output, session) {
       layout(title = "Distribusi Waktu Respon dalam Interval")
   })
   
-  
-  
-  
+  #Analitik Waktu Respon
+  output$circlePlot <- renderPlot({
+    response_distribution <- data_keluhan %>%
+      group_by(Interval_Response) %>%
+      summarise(Jumlah = n())
+    
+    # Buat pie chart dengan warna pink dan ungu
+    ggplot(response_distribution, aes(x = "", y = Jumlah, fill = Interval_Response)) +
+      geom_bar(stat = "identity", width = 1) +
+      coord_polar("y", start = 0) +
+      theme_void() +
+      labs(title = "Distribusi Waktu Respon", fill = "Interval Waktu Respon") +
+      scale_fill_manual(values = c("#ECAAC2", "#DBEEF7", "#ECAAC2", "#DBEEF7"))
+  })
   
 }
 
