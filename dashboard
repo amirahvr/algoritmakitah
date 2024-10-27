@@ -1,4 +1,3 @@
-
 # Load required libraries
 library(shiny)
 library(bs4Dash)
@@ -12,6 +11,8 @@ library(thematic)
 library(ggplot2)
 library(shinyWidgets)
 library(RColorBrewer)
+library(bslib)
+
 
 # Load Data dari CSV
 data_keluhan <- tryCatch({
@@ -49,11 +50,26 @@ data_segmentasi <- data_keluhan %>%
   group_by(Segmentasi_Wilayah, Sentimen_Rating) %>%
   summarise(Jumlah = n(), .groups = 'drop')
 
-
 # Header
 header <- dashboardHeader(
   title = "Dashboard Kinerja Agen",
-  skin = "light"
+  skin = "light",
+  status = "primary",
+  
+  # Tambahkan kolom notifikasi di navbar di kiri
+  tags$li(
+    class = "nav-item dropdown",
+    style = "position: absolute; right: 10px;", # Posisikan di bagian kiri dekat dark mode
+    tags$a(
+      href = "#", class = "nav-link", `data-toggle` = "dropdown",
+      icon("bell"), tags$span(class = "badge badge-danger navbar-badge", textOutput("notification_count"))
+    ),
+    tags$div(
+      class = "dropdown-menu dropdown-menu-left", # Dropdown ke arah kiri
+      style = "width: 300px; max-height: 300px; overflow-y: auto; white-space: normal;", # Maksimal ukuran dan pembatasan
+      uiOutput("notification_items")  # Menampilkan daftar notifikasi
+    )
+  )
 )
 
 # Sidebar
@@ -66,65 +82,112 @@ sidebar <- dashboardSidebar(
     menuItem("Agent Performance", tabName = "agent_performance", icon = icon("user-tie")),
     menuItem("Channel Analysis", tabName = "channel_analysis", icon = icon("comments")),
     menuItem("Sentiment Analysis", tabName = "sentiment_analysis", icon = icon("smile")),
-    menuItem("Region Segmentation", tabName = "region_segmentation", icon = icon("map-marked-alt"))
+    menuItem("Region Segmentation", tabName = "region_segmentation", icon = icon("map-marked-alt")),
+    menuItem("Response Analytics", tabName = "response_analytics", icon = icon("chart-pie"))
   ),
 )
 
-
-#Body
+# Body dengan CSS Custom yang lebih spesifik
 body <- dashboardBody(
-  # Custom styling
   tags$head(
     tags$style(HTML("
       /* Mengubah warna background body menjadi pastel pink */
       body {
-        background-color: #FFEBEE; /* Pastel pink */
+        background-color: #fce4ec;
       }
       
-      /* Menambahkan latar belakang pastel untuk elemen box */
+      /* Background dan tampilan box */
       .box {
-        background-color: #FFCDD2; /* Soft pastel red */
+        background-color: #f8bbd0;
         border-radius: 10px;
-        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
       }
 
-      /* Memperbaiki tampilan kotak sambutan */
+      /* Kotak sambutan */
       .welcome-box {
-        background: linear-gradient(to right, #FFCCBC 0%, #FFAB91 100%); /* Pastel orange shades */
+        background: linear-gradient(to right, #f48fb1 0%, #f8bbd0 100%);
         color: #ffffff;
         border-radius: 10px;
         padding: 20px;
-        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
-      }
-      
-      /* Mengubah warna ikon sambutan */
-      .welcome-icon {
-        color: #FFF59D; /* Pastel yellow */
-        font-size: 2em;
-        margin-right: 15px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       }
 
-      /* Mengubah warna background sidebar */
+      /* Sidebar */
       .main-sidebar {
-        background-color: #F8BBD0; /* Soft pastel pink */
+        background-color: #f8bbd0;
       }
 
-      /* Mengubah warna judul header */
-      .main-header .navbar {
-        background-color: #F48FB1; /* Pastel rose */
+      /* Navbar Header */
+      .main-header .navbar, .navbar, .navbar-light, .main-header .navbar .navbar-nav {
+        background-color: #f8bbd0 !important; /* Pink pastel */
       }
 
-      /* Mengubah warna box dashboard menjadi pastel */
+      /* Warna teks di Navbar */
+      .main-header .navbar .nav-link, 
+      .main-header .navbar .navbar-brand {
+        color: #333333 !important; /* Teks warna gelap */
+      }
+
+      /* Value Box */
       .value-box {
-        background-color: #E1BEE7; /* Pastel purple */
+        background-color: #f8bbd0;
         color: #333333;
         border-radius: 10px;
       }
+
+      /* Link dan teks sidebar */
+      .nav-link {
+        color: #333333;
+      }
+      .nav-link:hover {
+        background-color: #f48fb1;
+        color: #ffffff;
+      }
+      
+      /* CSS untuk Dark Mode Sidebar */
+      body.dark-mode .main-sidebar {
+        background-color: #333333 !important; /* Background sidebar dark mode */
+      }
+      body.dark-mode .sidebar-menu .nav-link, 
+      body.dark-mode .sidebar-menu .menu-item {
+        color: #ffffff !important; /* Teks sidebar putih dalam dark mode */
+      }
+      body.dark-mode .sidebar-menu .nav-link:hover {
+        background-color: #555555 !important; /* Hover item sidebar dark mode */
+        color: #ffffff !important;
+      }
+      /* Gaya untuk notifikasi dropdown */
+      .dropdown-menu {
+        background-color: #f8f9fa; /* Warna latar dropdown */
+        padding: 10px;
+      }
+      .dropdown-item {
+        padding: 8px 12px;
+        border-bottom: 1px solid #ddd;
+      }
+      .dropdown-item:last-child {
+        border-bottom: none;
+      }
+      .navbar-badge {
+        font-size: 12px; /* Ukuran kecil untuk badge */
+      }
+      /* Gaya dark mode untuk dropdown */
+      body.dark-mode .dropdown-menu {
+        background-color: #333333;
+        color: #e0e0e0;
+      }
+      body.dark-mode .dropdown-item {
+        border-bottom: 1px solid #555;
+        color: #e0e0e0;
+      }
+      /* Gaya tambahan untuk dark mode */
+      body.dark-mode .navbar .nav-link {
+        color: #e0e0e0;
+      }
     "))
   ),
-  
+
   tabItems(
-    # Tab 1: Overview
     tabItem(
       tabName = "overview",
       fluidRow(
@@ -179,7 +242,7 @@ body <- dashboardBody(
       fluidRow(
         box(
           title = "Tabel Keluhan",
-          dataTableOutput("summary_report"),
+          uiOutput("summary_report"),
           width = 12
         ),
         downloadButton("download_report", "Download Report")
@@ -310,6 +373,18 @@ body <- dashboardBody(
           plotlyOutput("plotSentimen")
         )
       )
+    ),
+    # Tab 7: Response Analytics
+    tabItem(
+      tabName = "response_analytics",
+      fluidRow(
+        box(
+          title = "Distribusi Waktu Respon",
+          elevation = 4,
+          plotlyOutput("response_time_distribution"),
+          width = 12
+        )
+      )
     )
   ) # Tutup tabItems
 ) # Tutup dashboardBody
@@ -319,7 +394,8 @@ body <- dashboardBody(
 ui <- dashboardPage(
   header = header,
   sidebar = sidebar,
-  body = body
+  body = body,
+  title = "Dashboard kinerja"
 )
 
 # Server
@@ -332,6 +408,41 @@ server <- function(input, output, session) {
     data$Batas_SLA <- data$Tanggal + 3
     data$SLA_Compliant <- ifelse(data$Status_Keluhan == "Selesai" & data$Tanggal <= data$Batas_SLA, 1, 0)
     data
+  })
+  
+  notification_data <- reactiveVal(data.frame(
+    message = c(
+      "Kamu punya 5 keluhan yang belum diselesaikan.",
+      "Ada 2 keluhan prioritas tinggi yang perlu segera ditangani.",
+      "Kamu belum memberikan tanggapan terhadap 3 keluhan terbaru."
+    ),
+    date = Sys.Date()
+  ))
+  
+  # Menghitung jumlah notifikasi
+  output$notification_count <- renderText({
+    nrow(notification_data())
+  })
+  
+  # Menampilkan daftar notifikasi
+  output$notification_items <- renderUI({
+    notifications <- notification_data()
+    
+    if (nrow(notifications) == 0) {
+      return(tags$div("Tidak ada notifikasi baru."))
+    }
+    
+    tagList(
+      lapply(1:nrow(notifications), function(i) {
+        tags$div(
+          class = "dropdown-item",
+          tags$p(
+            tags$strong(notifications$message[i]),
+            tags$span(class = "float-right text-muted text-sm", notifications$date[i])
+          )
+        )
+      })
+    )
   })
   
   # Debugging untuk jumlah data
@@ -439,19 +550,60 @@ server <- function(input, output, session) {
   
   
   # Summary Report Tabel
-  output$summary_report <- renderDataTable({
-    datatable(
-      complaints_data(),
-      options = list(
-        autoWidth = TRUE,
-        scrollX = TRUE,
-        pageLength = 10,
-        dom = 'Bfrtip',
-        buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
-        columnDefs = list(list(width = '20%', targets = c(0, 1)))
+  output$summary_report <- renderUI({
+    tags$div(
+      style = "background-color: inherit; color: inherit;",  # Warna mengikuti tema
+      DT::datatable(
+        complaints_data(),
+        options = list(
+          autoWidth = TRUE,
+          scrollX = TRUE,
+          pageLength = 10,
+          dom = 'Bfrtip',
+          buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+          columnDefs = list(list(width = '20%', targets = c(0, 1)))
+        ),
+        caption = "Ringkasan Keluhan",
+        rownames = FALSE,
+        class = "display compact cell-border stripe"  # Tetap mengikuti tampilan awal
       ),
-      caption = "Ringkasan Keluhan",
-      rownames = FALSE
+      # CSS tambahan khusus untuk dark mode
+      tags$style(HTML("
+      /* Tabel dalam mode dark */
+      body.dark-mode .dataTable {
+        background-color: #2c2c2c !important; /* Latar tabel */
+        color: #e0e0e0 !important; /* Teks tabel */
+      }
+      body.dark-mode .dataTable th, body.dark-mode .dataTable td {
+        color: #e0e0e0 !important; /* Teks header dan sel */
+      }
+      body.dark-mode .dataTables_filter label,
+      body.dark-mode .dataTables_length label,
+      body.dark-mode .dataTables_info {
+        color: #ffffff !important; /* Teks untuk label pencarian, info, dan panjang */
+      }
+      body.dark-mode .dataTable thead th {
+        background-color: #3b3b3b !important; /* Header tabel */
+        color: #ffffff !important;
+      }
+      body.dark-mode .dataTable tfoot th {
+        background-color: #3b3b3b !important; /* Footer tabel */
+        color: #ffffff !important;
+      }
+      body.dark-mode .dataTable .paginate_button {
+        background-color: #444444 !important; /* Tombol pagination */
+        color: #ffffff !important;
+      }
+      body.dark-mode .dataTable .paginate_button:hover {
+        background-color: #555555 !important; /* Hover tombol pagination */
+        color: #ffffff !important;
+      }
+      body.dark-mode .dataTables_filter input {
+        background-color: #444444 !important; /* Latar input search */
+        color: #ffffff !important; /* Teks input search */
+        border: 1px solid #666666;
+      }
+    "))
     )
   })
   
@@ -631,22 +783,23 @@ server <- function(input, output, session) {
              yaxis = list(title = "Persentase Penyelesaian (%)"))
   })
   
-  
-  # Output untuk plot sentimen per produk berdasarkan rating CSAT
+  #Sentimen Analisis
+  #sentimen per produk berdasarkan rating CSAT
   output$sentiment_plot <- renderPlotly({
     ggplot(sentiment_data, aes(x = Produk_Terkait, y = Jumlah, fill = Sentimen_Rating)) +
       geom_bar(stat = "identity", position = "dodge") +
       labs(title = "Perbandingan Sentimen per Produk (Rating CSAT)",
            x = "Produk Terkait", y = "Jumlah Feedback") +
       theme_minimal() +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+      theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+      scale_fill_manual(values = c("Positif" = "#9992E0", "Negatif" = "#FF9DF0"))
   })
   
   # Output untuk tabel detail sentimen per produk
   output$sentiment_table <- renderDT({
     datatable(sentiment_data)
   })
-
+  
   # Analisis Tren Sentimen Waktu menggunakan Plotly
   output$trend_sentiment_plot <- renderPlotly({
     library(dplyr)
@@ -692,10 +845,40 @@ server <- function(input, output, session) {
   output$plotSentimen <- renderPlotly({
     ggplotly(ggplot(data_reaktif(), aes(x = Segmentasi_Wilayah, y = Jumlah, fill = Sentimen_Rating)) +
                geom_bar(stat = "identity", position = "dodge") +
+               scale_fill_manual(values = c("Positif" = "#FF9DF0", "Negatif" = "#9992E0"))+
                theme_minimal() +
                labs(title = "Segmentasi Sentimen Berdasarkan Wilayah",
                     x = "Wilayah", y = "Jumlah"))
+    
   })
+  
+  output$response_time_distribution <- renderPlotly({
+    # Membuat bin interval untuk Waktu Respon
+    data_response_time <- complaints_data() %>%
+      mutate(Interval_Waktu_Respon = cut(Waktu_Respon, breaks = seq(0, max(Waktu_Respon, na.rm = TRUE), by = 1), include.lowest = TRUE))
+    
+    # Hitung distribusi berdasarkan interval waktu respon
+    response_distribution <- data_response_time %>%
+      group_by(Interval_Waktu_Respon) %>%
+      summarise(Jumlah = n(), .groups = 'drop')
+    
+    # Mengatur warna gradasi pink, ungu, biru
+    warna_gradien <- c("#BBB7E5", "#F7DFDF", "#DBEEF7", "#ECAAC2", "#93AECA")
+    
+    # Plot lingkaran untuk distribusi waktu respon
+    plot_ly(
+      data = response_distribution,
+      labels = ~Interval_Waktu_Respon,
+      values = ~Jumlah,
+      type = 'pie',
+      textinfo = 'label+percent',
+      hoverinfo = 'label+value+percent',
+      marker = list(colors = warna_gradien)
+    ) %>%
+      layout(title = "Distribusi Waktu Respon dalam Interval")
+  })
+  
+  
   
   
   
@@ -703,4 +886,3 @@ server <- function(input, output, session) {
 
 # Jalankan aplikasi
 shinyApp(ui = ui, server = server)
-
