@@ -169,6 +169,10 @@ body <- dashboardBody(
         padding: 20px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
       }
+      /* CSS untuk warna navbar agar sama dengan sidebar */
+        .navbar {
+          background-color: #f8bbd0 !important; /* Sesuaikan dengan warna sidebar */
+        }
 
       /* Warna latar sidebar */
       .main-sidebar {
