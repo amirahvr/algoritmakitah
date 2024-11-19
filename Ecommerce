@@ -1,0 +1,16 @@
+mysql> CREATE TABLE `shop_product` (
+    ->     `id` bigint AUTO_INCREMENT NOT NULL PRIMARY KEY,
+    ->     `name` varchar(255) NOT NULL UNIQUE,   -- Menggunakan varchar(255) untuk nama
+    ->     `slug` varchar(100) NOT NULL UNIQUE,
+    ->     `description` longtext NULL,
+    ->     `price` numeric(10, 2) NOT NULL,
+    ->     `stock_produk` integer UNSIGNED NOT NULL CHECK (`stock_produk` >= 0),
+    ->     `stock_diskon` integer UNSIGNED NOT NULL CHECK (`stock_diskon` >= 0),
+    ->     `created_at` datetime(6) NOT NULL,
+    ->     `updated_at` datetime(6) NOT NULL,
+    ->     `merek_produk` varchar(20) NOT NULL DEFAULT 'Bedak putih',
+    ->     `bahan` varchar(20) NOT NULL DEFAULT 'Cotton',
+    ->     `is_active` bool NOT NULL DEFAULT TRUE,
+    ->     `category_id` bigint NOT NULL,
+    ->     CONSTRAINT `shop_product_category_id_fk` FOREIGN KEY (`category_id`) REFERENCES `shop_kategori` (`id`)
+    -> );
