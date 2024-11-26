@@ -1,16 +1,96 @@
-mysql> CREATE TABLE `shop_product` (
-    ->     `id` bigint AUTO_INCREMENT NOT NULL PRIMARY KEY,
-    ->     `name` varchar(255) NOT NULL UNIQUE,   -- Menggunakan varchar(255) untuk nama
-    ->     `slug` varchar(100) NOT NULL UNIQUE,
-    ->     `description` longtext NULL,
-    ->     `price` numeric(10, 2) NOT NULL,
-    ->     `stock_produk` integer UNSIGNED NOT NULL CHECK (`stock_produk` >= 0),
-    ->     `stock_diskon` integer UNSIGNED NOT NULL CHECK (`stock_diskon` >= 0),
-    ->     `created_at` datetime(6) NOT NULL,
-    ->     `updated_at` datetime(6) NOT NULL,
-    ->     `merek_produk` varchar(20) NOT NULL DEFAULT 'Bedak putih',
-    ->     `bahan` varchar(20) NOT NULL DEFAULT 'Cotton',
-    ->     `is_active` bool NOT NULL DEFAULT TRUE,
-    ->     `category_id` bigint NOT NULL,
-    ->     CONSTRAINT `shop_product_category_id_fk` FOREIGN KEY (`category_id`) REFERENCES `shop_kategori` (`id`)
-    -> );
+categori detail
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kategori - {{ category.name }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="/">Toko Kami</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/cart/">Keranjang</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/checkout/">Checkout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Konten Utama -->
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Sidebar Kategori -->
+            <div class="col-md-3">
+                <h4>Kategori</h4>
+                <ul class="list-group">
+                    {% for cat in categories %}
+                        <li class="list-group-item {% if cat.slug == category.slug %}active{% endif %}">
+                            <a href="{% url 'category_detail' cat.slug %}" class="text-decoration-none text-dark">
+                                {{ cat.name }}
+                                <span class="badge bg-secondary float-end">{{ cat.products.count }}</span>
+                            </a>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item">Tidak ada kategori</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Daftar Produk -->
+            <div class="col-md-9">
+                <h1 class="mb-4">Produk dalam Kategori: {{ category.name }}</h1>
+                <div class="row">
+                    {% for product in products %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card">
+                                {% if product.image %}
+                                    <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                                {% else %}
+                                    <img src="https://via.placeholder.com/300" class="card-img-top" alt="No image available">
+                                {% endif %}
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ product.name }}</h5>
+                                    <p class="card-text">{{ product.description|truncatewords:10 }}</p>
+                                    <p class="card-text"><strong>Rp{{ product.price|floatformat:2 }}</strong></p>
+                                    <a href="{% url 'product_detail' product.slug %}" class="btn btn-primary">Lihat Detail</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted">Tidak ada produk dalam kategori ini.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center mt-4">
+        <p>&copy; 2024 Toko Kami. All rights reserved.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+<h1>Daftar Produk</h1>
+<ul>
+    {% for product in products %}
+        <li>{{ product.name }} - Rp{{ product.price }}</li>
+    {% empty %}
+        <li>Tidak ada produk tersedia.</li>
+    {% endfor %}
+</ul>
